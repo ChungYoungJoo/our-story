@@ -105,12 +105,21 @@ export async function sendMagicLink(email) {
 }
 
 export async function verifyCode(email, code) {
-  const data = await call(`${base}/verify`, {
-    type: 'email',
-    email: email.trim(),
-    token: code.trim(),
-  });
-  write(toSession(data, email.trim()));
+  const address = email.trim();
+  const token = code.trim();
+  // 메일이 가입 확인(signup)으로 왔는지 매직링크로 왔는지에 따라 GoTrue 가 받는 type 이 다르다.
+  // 어느 쪽인지 화면에서는 알 수 없으니 순서대로 시도한다.
+  let last = null;
+  for (const type of ['email', 'magiclink', 'signup']) {
+    try {
+      const data = await call(`${base}/verify`, { type, email: address, token });
+      write(toSession(data, address));
+      return;
+    } catch (err) {
+      last = err;
+    }
+  }
+  throw last || new Error('숫자를 확인하지 못했어요.');
 }
 
 // 매직링크를 누르고 돌아왔을 때 주소 끝에 붙은 토큰을 거둬들인다.
