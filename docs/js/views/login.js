@@ -82,7 +82,8 @@ export function render(root, ctx) {
   card.appendChild(
     h('p', {
       class: 'muted',
-      text: '메일함에서 링크를 누르면 바로 들어와요. 링크는 이 기기의 같은 브라우저에서 눌러 주세요.',
+      // 요청한 브라우저와 같아야 하는 건 아니다. 링크를 연 브라우저가 로그인된다.
+      text: '링크를 누른 브라우저가 로그인돼요. 지금 이 기기에서 쓰려면 이 기기에서 눌러 주세요. 링크는 한 번만 쓸 수 있어요.',
     }),
   );
 
@@ -94,7 +95,7 @@ export function render(root, ctx) {
         h('button', {
           class: 'link-btn',
           type: 'button',
-          text: '메일에 6자리 숫자가 왔어요',
+          text: '메일에 온 숫자로 들어가기',
           onclick: () => {
             form.codeMode = true;
             ctx.refresh();
@@ -121,8 +122,8 @@ export function render(root, ctx) {
     type: 'text',
     inputmode: 'numeric',
     autocomplete: 'one-time-code',
-    maxlength: '8',
-    placeholder: '메일에 적힌 숫자',
+    maxlength: '10',
+    placeholder: '메일에 적힌 숫자 (8자리)',
   });
   const confirm = async () => {
     form.busy = true;
@@ -158,7 +159,7 @@ export function render(root, ctx) {
   card.appendChild(
     h('p', {
       class: 'hint',
-      text: '숫자가 안 왔다면 Supabase 메일 서식에 {{ .Token }} 을 넣어야 해요. 링크만으로도 들어올 수 있어요.',
+      text: '다른 기기(부모 휴대폰)에서 숫자를 읽어 여기 적어도 됩니다. 링크와 달리 숫자는 옮겨도 안전해요.',
     }),
   );
   root.appendChild(card);
