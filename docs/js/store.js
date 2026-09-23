@@ -6,7 +6,7 @@
 import * as local from './local.js';
 import * as remote from './remote.js';
 import { SUPABASE_URL, SUPABASE_KEY, DEFAULT_MEMBERS } from './config.js';
-import { today, monthOf, shiftDay } from './util.js';
+import { today, monthOf, shiftDay, MAX_STORIES_PER_DAY } from './util.js';
 
 export async function createStore() {
   const backend = SUPABASE_URL && SUPABASE_KEY ? remote : local;
@@ -82,8 +82,15 @@ export async function createStore() {
     storiesOn(iso) {
       return store.stories.filter((s) => s.happened_on === iso);
     },
+    // 한 사람이 그날 쓴 이야기들. 하루에 여러 개 쓸 수 있다(최대 MAX_STORIES_PER_DAY).
+    storiesOf(memberId, iso) {
+      return store.stories.filter((s) => s.member_id === memberId && s.happened_on === iso);
+    },
     storyOf(memberId, iso) {
-      return store.stories.find((s) => s.member_id === memberId && s.happened_on === iso) || null;
+      return store.storiesOf(memberId, iso)[0] || null;
+    },
+    roomLeft(memberId, iso) {
+      return MAX_STORIES_PER_DAY - store.storiesOf(memberId, iso).length;
     },
     // 그 달에 기록이 있는 날들을 최근 날짜부터.
     daysIn(ym, memberId) {
@@ -104,6 +111,10 @@ export async function createStore() {
       return store.stories.filter((s) => s.happened_on.slice(5) === tail && s.happened_on < iso);
     },
     async addStory(row) {
+      // 화면에서도 막지만, 여러 기기에서 동시에 쓰는 경우가 있으니 여기서도 본다.
+      if (store.roomLeft(row.member_id, row.happened_on) <= 0) {
+        throw new Error(`하루에 ${MAX_STORIES_PER_DAY}개까지만 쓸 수 있어요.`);
+      }
       const saved = await backend.addStory({
         happened_on: row.happened_on,
         member_id: row.member_id,
