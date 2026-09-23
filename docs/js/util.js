@@ -110,6 +110,9 @@ export function uid() {
 
 /* ---------- 앱이 쓰는 말 ---------- */
 
+// 한 사람이 하루에 쓸 수 있는 이야기 수. DB 쪽 트리거(schema.sql)와 같은 값이어야 한다.
+export const MAX_STORIES_PER_DAY = 5;
+
 // 하루 기록의 기분. 초1도 고를 수 있게 이모지와 짧은 낱말을 함께 둔다.
 export const MOODS = [
   { key: 'great', emoji: '🤩', label: '최고야' },
