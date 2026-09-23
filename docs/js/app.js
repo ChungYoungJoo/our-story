@@ -34,7 +34,9 @@ const state = {
   ideaStatus: 'want',
   ideaKind: null,
   ideaDraft: { open: false, kind: 'book', title: '', reason: '', link: '' },
-  draft: { key: null, mood: null, body: '' }, // 오늘 화면의 쓰던 글
+  draft: { key: null, mood: null, body: '' }, // 오늘 화면에서 새로 쓰던 글
+  editingStory: null, // 지금 고쳐 쓰는 중인 이야기 id
+  editDraft: { key: null, mood: null, body: '' },
   editingMember: null,
   addingMember: false,
   editingReview: null,
@@ -58,6 +60,8 @@ const ctx = {
     if (id) localStorage.setItem(ME_KEY, id);
     else localStorage.removeItem(ME_KEY);
     state.draft.key = null; // 다른 사람으로 바뀌었으니 쓰던 글을 비운다
+    state.editingStory = null;
+    state.editDraft.key = null;
     refresh();
   },
   needMe() {
