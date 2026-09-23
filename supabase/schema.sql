@@ -50,11 +50,37 @@ create table if not exists stories (
   created_at   timestamptz not null default now()
 );
 
--- 한 사람이 같은 날에 두 개를 쓰지 않게 한다 (앱은 '고쳐 쓰기' 로 다룬다)
-create unique index if not exists stories_one_per_day
-  on stories (member_id, happened_on);
-
 create index if not exists stories_by_day on stories (happened_on desc);
+
+-- 한 사람이 하루에 쓸 수 있는 개수를 5개로 막는다.
+-- 화면(js/util.js 의 MAX_STORIES_PER_DAY)도 5다 — 숫자를 바꾸면 두 곳을 같이 바꿀 것.
+-- (2026-09-22 에는 '하루 한 개' 유일 인덱스였다. 2026-09-23 에 5개로 바꿨다)
+create or replace function stories_per_day_limit()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  written int;
+begin
+  select count(*) into written
+  from stories
+  where member_id = new.member_id
+    and happened_on = new.happened_on;
+
+  if written >= 5 then
+    raise exception '하루에 5개까지만 쓸 수 있어요';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists stories_max_per_day on stories;
+create trigger stories_max_per_day
+  before insert on stories
+  for each row execute function stories_per_day_limit();
 
 -- 추천: 책 · 가볼 곳 · 해보기 · 볼거리 · 먹을거리
 create table if not exists ideas (
